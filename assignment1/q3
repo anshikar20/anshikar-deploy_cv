@@ -1,0 +1,66 @@
+# question 3
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function to apply high-pass filter (edge detection/sharpening)
+def apply_high_pass_filter(image):
+    kernel = np.array([[0, -1, 0],
+                       [-1, 5, -1],
+                       [0, -1, 0]])  # Sharpening kernel
+    high_pass = cv2.filter2D(image, -1, kernel)
+    return high_pass
+
+# Function to apply low-pass filter (smoothing/blur)
+def apply_low_pass_filter(image):
+    low_pass = cv2.GaussianBlur(image, (15, 15), 0)  # Gaussian Blur with kernel size 15x15
+    return low_pass
+
+# Function to display multiple images
+def display_images(images, titles):
+    plt.figure(figsize=(15, 10))
+    for i in range(len(images)):
+        plt.subplot(2, 3, i+1)  # Adjust grid for 5 images
+        plt.imshow(cv2.cvtColor(images[i], cv2.COLOR_BGR2RGB))
+        plt.title(titles[i])
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+# Main function
+def main1():
+    # Load two images (Replace with your actual file paths)
+    image1 = cv2.imread("image/cat.jpg")  # First image
+    image2 = cv2.imread("image/dog.jpg")  # Second image
+
+    # Check if images loaded successfully
+    if image1 is None or image2 is None:
+        print("Error: Images not found or could not be loaded.")
+        return
+
+    # Resize images to the same dimensions
+    height, width = image1.shape[:2]
+    image2_resized = cv2.resize(image2, (width, height))
+
+    # Ensure both images have 3 channels
+    if len(image1.shape) != 3:
+        image1 = cv2.cvtColor(image1, cv2.COLOR_GRAY2BGR)
+    if len(image2_resized.shape) != 3:
+        image2_resized = cv2.cvtColor(image2_resized, cv2.COLOR_GRAY2BGR)
+
+    # Apply filters
+    high_pass_image = apply_high_pass_filter(image1)
+    low_pass_image = apply_low_pass_filter(image2_resized)
+
+    # Combine high-pass and low-pass images
+    combined_image = cv2.addWeighted(high_pass_image, 0.5, low_pass_image, 0.5, 0)
+
+    # Display all images
+    images = [image1, high_pass_image, image2_resized, low_pass_image, combined_image]
+    titles = ["Original Image 1", "High-Pass Filtered Image",
+              "Original Image 2 (Resized)", "Low-Pass Filtered Image", "Combined Image"]
+
+    display_images(images, titles)
+
+if __name__ == "__main1__":
+    main1()
