@@ -1,0 +1,89 @@
+#question 1 and 2
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Provided 'show' function
+def show(name, n, m, i, Title):
+    plt.subplot(n, m, i)
+    plt.imshow(name, cmap='gray')
+    plt.title(Title)
+    plt.axis('off')
+
+# Capture an image from the webcam
+def capture_image():
+    cap = cv2.VideoCapture(0)  # Use default camera (0)
+    if not cap.isOpened():
+        print("Error: Camera not accessible")
+        return None
+
+    print("Press 's' to save and capture an image. Press 'q' to quit.")
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Error: Failed to capture image")
+            break
+
+        cv2.imshow("Press 's' to Capture", frame)
+        key = cv2.waitKey(1)
+
+        if key == ord('s'):  # Save and return frame on 's' key
+            print("Image Captured!")
+            cap.release()
+            cv2.destroyAllWindows()
+            return frame
+        elif key == ord('q'):  # Quit on 'q' key
+            print("Exiting without capturing.")
+            cap.release()
+            cv2.destroyAllWindows()
+            return None
+
+# Process and display the images
+def main():
+    frame = capture_image()
+    if frame is None:
+        return
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # Apply binary thresholding
+    _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+    # c. Sobel and Canny edge detectors
+    sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)  # Sobel X
+    sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)  # Sobel Y
+    sobel_combined = cv2.magnitude(sobel_x, sobel_y)  # Combine X and Y gradients
+    canny_edges = cv2.Canny(gray, 100, 200)  # Canny edge detector
+
+    # d. Gaussian filtering (remove noise)
+    gaussian_blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # e. Sharpen the blurred image using a sharpening kernel
+    sharpening_kernel = np.array([[0, -1, 0],
+                                  [-1, 5, -1],
+                                  [0, -1, 0]])
+    sharpened_image = cv2.filter2D(gaussian_blur, -1, sharpening_kernel)
+
+    rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    bgr_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
+
+    # Display the images using 'show' function
+    plt.figure(figsize=(15, 7))
+
+    show(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), 1, 3, 1, "Original Image")  # Convert BGR to RGB for display
+    show(gray, 1, 3, 2, "Grayscale Image")
+    show(binary, 1, 3, 3, "Binary Threshold")
+    show(sobel_combined, 2, 3, 3, "Sobel Edge Detector")
+    show(canny_edges, 2, 3, 4, "Canny Edge Detector")
+    show(gaussian_blur, 2, 3, 5, "Gaussian Blur")
+    show(sharpened_image, 2, 3, 6, "Sharpened Image")
+    show(rgb_image, 1, 2, 1, "RGB Image")
+    show(bgr_image, 1, 2, 2, "Converted BGR Image")
+
+    plt.subplots_adjust(wspace=0.3, hspace=0.3)
+    plt.show()
+
+if __name__ == "__main__":
+    main()
+# canny edge detector is more shapper give thinner edges as compared to sobel edge detector
