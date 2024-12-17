@@ -28,7 +28,7 @@ def display_images(images, titles):
     plt.show()
 
 # Main function
-def main1():
+def main():
     # Load two images (Replace with your actual file paths)
     image1 = cv2.imread("image/cat.jpg")  # First image
     image2 = cv2.imread("image/dog.jpg")  # Second image
@@ -62,5 +62,5 @@ def main1():
 
     display_images(images, titles)
 
-if __name__ == "__main1__":
-    main1()
+if __name__ == "__main__":
+    main()
