@@ -1,0 +1,57 @@
+#for q4 read the crash course no difficulties faced as such read more on youtube as well and geeks for geeks 
+ #q5
+from PIL import Image
+import numpy as np
+
+def resize_image(image_array, size=(100, 100)):
+    """
+    Resize the image to a smaller size to remove wrinkles or variations.
+    """
+    return np.array(Image.fromarray(image_array).resize(size))
+
+def dominant_color(image_array):
+    """
+    Find the dominant color in an image by calculating the mean color.
+    """
+    return np.mean(image_array, axis=(0, 1))
+
+def determine_flag(image_path):
+    # Load and preprocess the image
+    image = Image.open(image_path)
+    image = image.convert("RGB")
+    image_array = np.array(image)
+
+    # Resize the image for simplification
+    image_array = resize_image(image_array)
+    height, width, _ = image_array.shape
+
+    # Split into top and bottom halves
+    top_half = image_array[:height // 2, :, :]
+    bottom_half = image_array[height // 2:, :, :]
+
+    # Get dominant colors for both halves
+    top_color = dominant_color(top_half)
+    bottom_color = dominant_color(bottom_half)
+
+    # Function to check for red and white colors with tolerance
+    def is_red(color):
+        r, g, b = color
+        return r > 100 and r > g * 1.5 and r > b * 1.5
+
+    def is_white(color):
+        r, g, b = color
+        return r > 200 and g > 200 and b > 200
+
+    # Determine the flag based on dominant colors
+    if is_red(top_color) and is_white(bottom_color):
+        return "The image is the flag of Indonesia."
+    elif is_white(top_color) and is_red(bottom_color):
+        return "The image is the flag of Poland."
+    else:
+        return "The image is neither the flag of Indonesia nor Poland."
+
+if __name__ == "__main__":
+    image_path = input("Enter the path to the image file: ")
+    result = determine_flag(image_path)
+    print(result)
+
