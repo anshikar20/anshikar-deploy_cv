@@ -1,0 +1,71 @@
+# File: real_time_object_detection_ssd.py
+import cv2
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.applications import mobilenet_v2
+
+# Load the pre-trained SSD MobileNet v2 model
+MODEL_PATH = "ssd_mobilenet_v2_320x320_coco17_tpu-8"  # Replace with your SSD model path
+model = tf.saved_model.load(MODEL_PATH)
+
+
+# Function to draw bounding boxes
+def draw_boxes(frame, detections, labels, threshold=0.5):
+    h, w, _ = frame.shape
+    for detection in detections:
+        confidence = detection[2]
+        if confidence > threshold:
+            box = detection[0:4]  # Normalized box coordinates
+            x1, y1, x2, y2 = int(box[0] * w), int(box[1] * h), int(box[2] * w), int(box[3] * h)
+            label = labels[int(detection[1])]
+
+            # Draw bounding box and label
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            text = f"{label}: {confidence:.2f}"
+            cv2.putText(frame, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+    return frame
+
+
+# Load class labels
+with open("imagenet_classes.txt", "r") as f:  # Replace with appropriate labels file
+    labels = [line.strip() for line in f.readlines()]
+
+# Start video capture
+cap = cv2.VideoCapture(0)  # Replace 0 with video file path for non-webcam input
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Preprocess the frame for SSD model
+    input_tensor = tf.convert_to_tensor(frame)
+    input_tensor = tf.image.resize(input_tensor, (300, 300)) / 255.0
+    input_tensor = tf.expand_dims(input_tensor, axis=0)
+
+    # Perform detection
+    detections = model(input_tensor)
+
+    # Extract detection results
+    boxes, classes, scores = (
+        detections["detection_boxes"].numpy(),
+        detections["detection_classes"].numpy(),
+        detections["detection_scores"].numpy(),
+    )
+
+    # Combine detections into a usable format
+    detection_results = []
+    for i in range(len(scores[0])):
+        detection_results.append([boxes[0][i], classes[0][i], scores[0][i]])
+
+    # Draw bounding boxes
+    frame = draw_boxes(frame, detection_results, labels)
+
+    # Display the frame
+    cv2.imshow("Real-Time Object Detection", frame)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+# Cleanup
+cap.release()
+cv2.destroyAllWindows()
