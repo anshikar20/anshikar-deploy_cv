@@ -1,0 +1,52 @@
+from PIL import Image
+
+def is_red(pixel):
+    """Check if a pixel is predominantly red."""
+    r, g, b = pixel
+    return r > 150 and g < 100 and b < 100
+
+def is_white(pixel):
+    """Check if a pixel is predominantly white."""
+    r, g, b = pixel
+    return r > 200 and g > 200 and b > 200
+
+def classify_flag(image_path):
+    """Classify the flag as Indonesia or Poland."""
+    # Load and resize the image
+    img = Image.open(image_path)
+    img = img.resize((100, 60))  # Resize to a manageable size (e.g., 100x60)
+    pixels = img.load()
+
+    # Dimensions
+    width, height = img.size
+    half_height = height // 2
+
+    # Count colors in top and bottom halves
+    top_red, top_white, bottom_red, bottom_white = 0, 0, 0, 0
+    for y in range(height):
+        for x in range(width):
+            pixel = pixels[x, y]
+            if y < half_height:  # Top half
+                if is_red(pixel):
+                    top_red += 1
+                elif is_white(pixel):
+                    top_white += 1
+            else:  # Bottom half
+                if is_red(pixel):
+                    bottom_red += 1
+                elif is_white(pixel):
+                    bottom_white += 1
+
+    # Classify based on counts
+    if top_red > top_white and bottom_white > bottom_red:
+        return "Indonesia"
+    elif top_white > top_red and bottom_red > bottom_white:
+        return "Poland"
+    else:
+        return "Unknown"
+
+# Example usage
+image_path = "image/poland.jpeg"  # Replace with the correct path to your input image
+result = classify_flag(image_path)
+print(f"The flag is: {result}")
+
